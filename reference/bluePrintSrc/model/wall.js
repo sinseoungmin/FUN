@@ -4,12 +4,14 @@ var utils = require('../utils/utils')
 // start and end are Corner objects
 var Wall = function(start, end) {
 
-  this.id = getUuid();
-
   var scope = this;
   var start = start;
   var end = end;
 
+  start.attachStart(this)
+  end.attachEnd(this);
+
+  this.id = getUuid();
   this.thickness = 10;
   this.height = 250;
 
@@ -35,9 +37,6 @@ var Wall = function(start, end) {
   this.frontTexture = defaultTexture;
   this.backTexture = defaultTexture;
 
-  start.attachStart(this)
-  end.attachEnd(this);
-
   function getUuid() {
     return [start.id, end.id].join();
   }
@@ -57,25 +56,18 @@ var Wall = function(start, end) {
   this.fireOnMove = function(func) {
     moved_callbacks.add(func);
   }
-
   this.fireOnDelete = function(func) {
     deleted_callbacks.add(func);
   }
-
   this.dontFireOnDelete = function(func) {
     deleted_callbacks.remove(func);
   }
-
   this.fireOnAction = function(func) {
     action_callbacks.add(func)
   }
 
   this.fireAction = function(action) {
     action_callbacks.fire(action)
-  }
-
-  this.getStart = function() {
-    return start;
   }
 
   this.relativeMove = function(dx, dy) {
@@ -96,22 +88,21 @@ var Wall = function(start, end) {
     }
   }
 
+  this.getStart = function() {
+    return start;
+  }
   this.getEnd = function() {
     return end;
   }
-
   this.getStartX = function() {
     return start.getX();
   }
-
   this.getEndX = function() {
     return end.getX();
   }
-
   this.getStartY = function() {
     return start.getY();
   }
-
   this.getEndY = function() {
     return end.getY();
   }

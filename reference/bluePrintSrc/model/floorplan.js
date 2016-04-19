@@ -65,15 +65,12 @@ var Floorplan = function() {
   this.fireOnNewWall = function(callback) {
     new_wall_callbacks.add(callback);
   }
-
   this.fireOnNewCorner = function(callback) {
     new_corner_callbacks.add(callback);
   }
-
   this.fireOnRedraw = function(callback) {
     redraw_callbacks.add(callback);
   }
-
   this.fireOnUpdatedRooms = function(callback) {
     updated_rooms.add(callback);
   }
@@ -108,11 +105,9 @@ var Floorplan = function() {
   this.getWalls = function() {
     return walls;
   }
-
   this.getCorners = function() {
     return corners;
   }
-
   this.getRooms = function() {
     return rooms;
   }
@@ -123,7 +118,7 @@ var Floorplan = function() {
       if (corners[i].distanceFrom(x, y) < tolerance) {
         //console.log("got corner")
         return corners[i];
-      }      
+      }
     }
     return null;
   }
@@ -133,7 +128,7 @@ var Floorplan = function() {
     for (i = 0; i < walls.length; i++) {
       if (walls[i].distanceFrom(x, y) < tolerance) {
         return walls[i];
-      }      
+      }
     }
     return null;
   }
@@ -171,7 +166,7 @@ var Floorplan = function() {
     var corners = {};
     if (floorplan == null || !('corners' in floorplan) || !('walls' in floorplan)) {
       return
-    } 
+    }
     for (var id in floorplan.corners) {
       var corner = floorplan.corners[id];
       corners[id] = this.newCorner(corner.x, corner.y, id);
@@ -191,7 +186,7 @@ var Floorplan = function() {
       this.floorTextures = floorplan.newFloorTextures;
     }
 
-    this.update();    
+    this.update();
     this.roomLoadedCallbacks.fire();
   }
 
@@ -284,7 +279,7 @@ var Floorplan = function() {
         ret = new THREE.Vector3( (xMin + xMax) * 0.5, 0, (zMin + zMax) * 0.5 );
       } else {
         // size
-        ret = new THREE.Vector3( (xMax - xMin), 0, (zMax - zMin) );        
+        ret = new THREE.Vector3( (xMax - xMin), 0, (zMax - zMin) );
       }
     }
     return ret;
@@ -324,14 +319,14 @@ function findRooms(corners) {
       previousCorner.y - currentCorner.y,
       nextCorner.x - currentCorner.x,
       nextCorner.y - currentCorner.y);
-    return theta;
+      return theta;
   }
-  
+
   function removeDuplicateRooms(roomArray) {
     var results = [];
     var lookup = {};
     var hashFunc = function(corner) {
-      return corner.id 
+      return corner.id
     };
     var sep = '-';
     for (var i = 0; i < roomArray.length; i++) {
@@ -350,9 +345,9 @@ function findRooms(corners) {
         lookup[str] = true;
       }
     }
-    return results; 
+    return results;
   }
-  
+
   function findTightestCycle(firstCorner, secondCorner) {
     var stack = [];
     var next = {
@@ -362,35 +357,35 @@ function findRooms(corners) {
     var visited = {};
     visited[firstCorner.id] = true;
 
-    while ( next ) {  
+    while ( next ) {
       // update previous corners, current corner, and visited corners
       var currentCorner = next.corner;
-      visited[currentCorner.id] = true; 
-    
+      visited[currentCorner.id] = true;
+
       // did we make it back to the startCorner?
       if ( next.corner === firstCorner && currentCorner !== secondCorner ) {
-        return next.previousCorners;  
+        return next.previousCorners;
       }
-      
+
       var addToStack = [];
-      var adjacentCorners = next.corner.adjacentCorners();  
+      var adjacentCorners = next.corner.adjacentCorners();
       for ( var i = 0; i < adjacentCorners.length; i++ ) {
         var nextCorner = adjacentCorners[i];
-            
+
         // is this where we came from?
         // give an exception if its the first corner and we aren't at the second corner
-        if ( nextCorner.id in visited &&  
+        if ( nextCorner.id in visited &&
           !( nextCorner === firstCorner && currentCorner !== secondCorner )) {
           continue;
         }
-        
-        // nope, throw it on the queue  
-        addToStack.push( nextCorner );  
+
+        // nope, throw it on the queue
+        addToStack.push( nextCorner );
       }
-    
+
       var previousCorners = next.previousCorners.slice(0);
-      previousCorners.push( currentCorner );  
-      if (addToStack.length > 1) {  
+      previousCorners.push( currentCorner );
+      if (addToStack.length > 1) {
         // visit the ones with smallest theta first
         var previousCorner = next.previousCorners[next.previousCorners.length - 1];
         addToStack.sort(function(a,b) {
@@ -398,21 +393,21 @@ function findRooms(corners) {
               calculateTheta(previousCorner, currentCorner, a));
         });
       }
-    
+
       if (addToStack.length > 0) {
         // add to the stack
         utils.forEach(addToStack, function(corner) {
           stack.push({
             corner: corner,
             previousCorners: previousCorners
-          });   
+          });
         });
       }
-    
+
       // pop off the next one
       next = stack.pop();
     }
-    return [];  
+    return [];
   }
 
   // find tightest loops, for each corner, for each adjacent

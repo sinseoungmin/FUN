@@ -54,7 +54,6 @@ var FloorplannerView = function(_floorplan, _viewmodel, _canvas) {
 
   //그리기, 계속 그리네...?
   this.draw = function() {
-    //클리어
     context.clearRect(0, 0, canvasElement.width, canvasElement.height);
     drawGrid();
     utils.forEach(_floorplan.getRooms(), drawRoom);

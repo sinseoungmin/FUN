@@ -1,7 +1,5 @@
 var $ = require('jquery');
-
 var FloorplannerView = require('./floorplanner_view')
-
 var utils = require('../utils/utils')
 
 var Floorplanner = function(_canvas, _floorplan) {
