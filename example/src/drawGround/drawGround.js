@@ -2,14 +2,14 @@
 
 $(document).ready(function(){
 
-  //settings
+  //settings ------------------------------
   var color = '#ffa500';
   var radius = 5;
   var fillColor = color;
   var tolerance = 10;
 
 
-  //공통 함수
+  //공통 함수 --------------------------------
   function forEach(array, action) {
     for (var i = 0; i < array.length; i++) {
       action(array[i]);
@@ -55,8 +55,7 @@ $(document).ready(function(){
   }
 
 
-
-  //클래스: corner, wall
+  //클래스: corner, wall ---------------------
   var Corner = function(x,y){
     this.x = x;
     this.y = y;
@@ -66,6 +65,7 @@ $(document).ready(function(){
     this.start = start;
     this.end = end;
   }
+
 
   //window가 load 될때 Event Listener를 등록 하여 준다.
   window.addEventListener('load', InitEvent, false);
