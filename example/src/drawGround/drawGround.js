@@ -6,6 +6,7 @@ $(document).ready(function(){
   var color = '#ffa500';
   var radius = 5;
   var fillColor = color;
+  var tolerance = 10;
 
 
   //공통 함수
@@ -14,6 +15,45 @@ $(document).ready(function(){
       action(array[i]);
     }
   }
+
+  function distance( x1, y1, x2, y2 ) {
+  	return Math.sqrt(
+  		Math.pow(x2 - x1, 2) +
+  		Math.pow(y2 - y1, 2));
+  }
+  function closestPointOnLine(x, y, wall) {
+    var A = x - wall.start.x;
+    var B = y - wall.start.y;
+    var C = wall.end.x - wall.start.x;
+    var D = wall.end.y - wall.start.y;
+
+    var dot = A * C + B * D;
+    var len_sq = C * C + D * D;
+    var param = dot / len_sq;
+
+    var xx, yy;
+
+    if (param < 0 || (wall.start.x == wall.end.x && wall.start.y == wall.end.y)) {
+      xx = wall.start.x;
+      yy = wall.start.y;
+    } else if (param > 1) {
+      xx = wall.end.x;
+      yy = wall.end.y;
+    } else {
+      xx = wall.start.x + param * C;
+      yy = wall.start.y + param * D;
+    }
+
+    return {
+      x: xx,
+      y: yy
+    }
+  }
+  function pointDistanceFromLine( x, y, wall ) {
+    var point = closestPointOnLine(x, y, wall);
+  	return distance(x,y,point.x,point.y);
+  }
+
 
 
   //클래스: corner, wall
@@ -73,6 +113,24 @@ $(document).ready(function(){
 
       this.mousedown = function (ev){
 
+        //기존에 있는 corner나 wall와 거리가 가까울 때 해당 코너로 인식
+        forEach(corners,function(c){
+          if(Math.abs(c.x - ev._x) < tolerance){
+            ev._x = c.x;
+          }
+          if(Math.abs(c.y - ev._y) < tolerance){
+            ev._y = c.y;
+          }
+        });
+        forEach(walls,function(w){
+          if(pointDistanceFromLine(ev._x, ev._y, w) < tolerance ){
+            var point = closestPointOnLine(ev._x, ev._y, w);
+            ev._x = point.x;
+            ev._y = point.y;
+          }
+        });
+
+
         //처음 누를 때
         if(!self.started){
           fixX = ev._x;
@@ -80,7 +138,7 @@ $(document).ready(function(){
 
           self.started = true;
         }
-        else{          
+        else{
           corner1 = new Corner(fixX,fixY);
           corner2 = new Corner(ev._x,ev._y);
           wall = new Wall(corner1,corner2);
@@ -97,7 +155,6 @@ $(document).ready(function(){
         }
       }
 
-      // 마우스가 이동 할때(mousemove) 마다 호출 된다.
       this.mousemove = function (ev){
         //console.log(self.started);
         mouseX = ev._x;
@@ -118,6 +175,7 @@ $(document).ready(function(){
         }
       });
   }
+
 
   //좌표 설정
   function ev_canvas (ev){
