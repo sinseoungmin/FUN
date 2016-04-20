@@ -79,7 +79,7 @@ $(document).ready(function(){
   var walls = [];
 
 
-  //undomanager
+  //undomanager --------------------------
   var undoManager = new UndoManager();
 
   $('#undoB').click(function(){
@@ -150,7 +150,7 @@ $(document).ready(function(){
           }
         });
 
-
+        //첫 클릭인지 확인
         if(!self.started){
           fixX = ev._x;
           fixY = ev._y;
@@ -158,56 +158,64 @@ $(document).ready(function(){
           self.started = true;
         }
         else{
-          corner1 = new Corner(fixX,fixY);
-          corner2 = new Corner(ev._x,ev._y);
-          wall = new Wall(corner1,corner2);
-
-
-          //corner1 관련, 처음 찍는 corner가 기존에 있는지 없는지 check
-          var isInArr = $.grep(corners, function(e){
-              return  e.x == corner1.x && e.y == corner1.y
-          });
-          if(isInArr.length == 0){
-            corners.push(corner1);
+          //같은 위치 두 번 클릭할 경우 그리기 종료
+          if(Math.abs(fixX - ev._x) < tolerance && Math.abs(fixY - ev._y) < tolerance){
+            self.started = false;
+            mouseX = '';
+            mouseY = '';
+            draw();
           }
+          else{
+            corner1 = new Corner(fixX,fixY);
+            corner2 = new Corner(ev._x,ev._y);
+            wall = new Wall(corner1,corner2);
 
 
-          //corner2 관련
-          corners.push(corner2);
-          walls.push(wall);
-
-          fixX = ev._x;
-          fixY = ev._y;
-
-
-          //undoManager 변수
-          var c1 = corners[corners.length-2];
-          var c2 = corners[corners.length-1];
-          var w  = walls[walls.length-1];
-
-          undoManager.add({
-            undo:function(){
-              if(corners.length == 2){
-                corners.splice(0,2);
-              }
-              else{
-                corners.splice(corners.length-1,1);
-              }
-              walls.splice(walls.length-1,1);
-            },
-            redo:function(){
-              if(corners.length == 0){
-                corners.push(c1);
-                corners.push(c2);
-              }
-              else{
-                corners.push(c2);
-              }
-
-              walls.push(w);
+            //corner1 관련, 처음 찍는 corner가 기존에 있는지 없는지 check
+            var isInArr = $.grep(corners, function(e){
+                return  e.x == corner1.x && e.y == corner1.y
+            });
+            if(isInArr.length == 0){
+              corners.push(corner1);
             }
-          });
 
+
+            //corner2 관련
+            corners.push(corner2);
+            walls.push(wall);
+
+            fixX = ev._x;
+            fixY = ev._y;
+
+
+            //undoManager 변수
+            var c1 = corners[corners.length-2];
+            var c2 = corners[corners.length-1];
+            var w  = walls[walls.length-1];
+
+            undoManager.add({
+              undo:function(){
+                if(corners.length == 2){
+                  corners.splice(0,2);
+                }
+                else{
+                  corners.splice(corners.length-1,1);
+                }
+                walls.splice(walls.length-1,1);
+              },
+              redo:function(){
+                if(corners.length == 0){
+                  corners.push(c1);
+                  corners.push(c2);
+                }
+                else{
+                  corners.push(c2);
+                }
+
+                walls.push(w);
+              }
+            });
+          }
         }
       }
 
