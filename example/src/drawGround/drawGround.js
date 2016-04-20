@@ -1,5 +1,4 @@
 
-
 $(document).ready(function(){
 
   //settings ------------------------------
@@ -79,6 +78,27 @@ $(document).ready(function(){
   var corners = [];
   var walls = [];
 
+
+  //undomanager
+  var undoManager = new UndoManager();
+
+  $('#undoB').click(function(){
+    undoManager.undo();
+    self.started = false;
+    mouseX = '';
+    mouseY = '';
+    draw();
+  });
+  $('#redoB').click(function(){
+    undoManager.redo();
+    self.started = false;
+    mouseX = '';
+    mouseY = '';
+    draw();
+  });
+
+
+
   function InitEvent (){
 
     canvas = document.getElementById('drawCanvas');
@@ -131,7 +151,6 @@ $(document).ready(function(){
         });
 
 
-        //처음 누를 때
         if(!self.started){
           fixX = ev._x;
           fixY = ev._y;
@@ -143,15 +162,52 @@ $(document).ready(function(){
           corner2 = new Corner(ev._x,ev._y);
           wall = new Wall(corner1,corner2);
 
-          var flag = corners.indexOf(corner1);
-          if(flag == -1){
+
+          //corner1 관련, 처음 찍는 corner가 기존에 있는지 없는지 check
+          var isInArr = $.grep(corners, function(e){
+              return  e.x == corner1.x && e.y == corner1.y
+          });
+          if(isInArr.length == 0){
             corners.push(corner1);
           }
+
+
+          //corner2 관련
           corners.push(corner2);
           walls.push(wall);
 
           fixX = ev._x;
           fixY = ev._y;
+
+
+          //undoManager 변수
+          var c1 = corners[corners.length-2];
+          var c2 = corners[corners.length-1];
+          var w  = walls[walls.length-1];
+
+          undoManager.add({
+            undo:function(){
+              if(corners.length == 2){
+                corners.splice(0,2);
+              }
+              else{
+                corners.splice(corners.length-1,1);
+              }
+              walls.splice(walls.length-1,1);
+            },
+            redo:function(){
+              if(corners.length == 0){
+                corners.push(c1);
+                corners.push(c2);
+              }
+              else{
+                corners.push(c2);
+              }
+
+              walls.push(w);
+            }
+          });
+
         }
       }
 
