@@ -3,7 +3,9 @@ $(document).ready(function(){
 
   //settings ------------------------------
   var color = '#ffa500';
+  var roomColor = '#8afcff';
   var radius = 5;
+  var lineWidth = 5;
   var fillColor = color;
   var tolerance = 10;
 
@@ -14,6 +16,19 @@ $(document).ready(function(){
       action(array[i]);
     }
   }
+
+  //고유 id 생성
+  var guid = (function() {
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+                 .toString(16)
+                 .substring(1);
+    }
+    return function() {
+      return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+             s4() + '-' + s4() + s4() + s4();
+    };
+  })();
 
   function distance( x1, y1, x2, y2 ) {
   	return Math.sqrt(
@@ -54,15 +69,21 @@ $(document).ready(function(){
   }
 
 
-  //클래스: corner, wall ---------------------
+  //클래스: corner, wall, room ---------------
   var Corner = function(x,y){
     this.x = x;
     this.y = y;
+    this.id = guid();
   }
   //start,end 는 corner 객체
   var Wall = function(start,end){
     this.start = start;
     this.end = end;
+    this.id = [start.id, end.id].join();
+  }
+  //corners는 corner 객체들의 배열
+  var Room = function(corners){
+    this.corners = corners;
   }
 
 
@@ -77,6 +98,10 @@ $(document).ready(function(){
 
   var corners = [];
   var walls = [];
+
+  var adjList = [];
+  var rooms = [];
+
 
 
   //undomanager --------------------------
@@ -116,11 +141,8 @@ $(document).ready(function(){
       return;
     }
 
-
-    // tool_pencil 함수의 인스턴스를 생성 한다.
     tool = new tool_pencil();
 
-    // Canvas에 mousedown, mousemove, mouseup 이벤트 리스너를 추가한다.
     canvas.addEventListener('mousedown', ev_canvas, false);
     canvas.addEventListener('mousemove', ev_canvas, false);
 
@@ -130,6 +152,7 @@ $(document).ready(function(){
   function tool_pencil (){
 
       var tool = this;
+
 
       this.mousedown = function (ev){
 
@@ -217,6 +240,7 @@ $(document).ready(function(){
             });
           }
         }
+
       }
 
       this.mousemove = function (ev){
@@ -275,7 +299,7 @@ $(document).ready(function(){
     context.beginPath();
     context.moveTo(startX, startY);
     context.lineTo(endX, endY);
-    context.lineWidth = 5;
+    context.lineWidth = lineWidth;
     context.strokeStyle = color;
     context.stroke();
   }
@@ -284,7 +308,7 @@ $(document).ready(function(){
     context.beginPath();
     context.moveTo(wall.start.x, wall.start.y);
     context.lineTo(wall.end.x, wall.end.y);
-    context.lineWidth = 5;
+    context.lineWidth = lineWidth;
     context.strokeStyle = color;
     context.stroke();
   }
@@ -295,5 +319,24 @@ $(document).ready(function(){
     context.fillStyle = fillColor;
     context.fill();
   }
+
+  function drawRoom(room){
+    var corners = room.corners;
+    context.beginPath();
+    context.moveTo(corners[0].x, corners[0].y);
+    for (var i = 1; i < corners.length; i++){
+      context.lineTo(corners[i].x,corners[i].y);
+    }
+    context.closePath();
+    context.fillStyle = roomColor;
+    context.fill();
+    context.lineWidth = lineWidth;
+    context.strokeStyle = color;
+    context.stroke();
+  }
+
+
+  //find room!!
+
 
 });
