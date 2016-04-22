@@ -17,6 +17,17 @@ $(document).ready(function(){
     }
   }
 
+  function adjListIdx(corner){
+    var idx = -1;
+    for(var i=0; i<adjList.length; i++){
+      if(adjList[i][0].id == corner.id ){
+        idx = i;
+      }
+    }
+    return idx;
+  }
+
+
   //고유 id 생성
   var guid = (function() {
     function s4() {
@@ -224,13 +235,7 @@ $(document).ready(function(){
               corner2 = new Corner(ev._x,ev._y);
               corners.push(corner2);
 
-              var idx = -1;
-              for(var i=0; i<adjList.length; i++){
-                if(adjList[i][0].id == isInArr1[0].id ){
-                  idx = i;
-                }
-              }
-
+              var idx = adjListIdx(isInArr1[0])
               adjList[idx][1].push(corner2);
               adjList.push([corner2,[isInArr1[0]]]);
 
@@ -245,13 +250,7 @@ $(document).ready(function(){
               corner1 = new Corner(fixX,fixY);
               corners.push(corner1);
 
-              var idx = -1;
-              for(var i=0; i<adjList.length; i++){
-                if(adjList[i][0].id == isInArr2[0].id ){
-                  idx = i;
-                }
-              }
-
+              var idx = adjListIdx(isInArr2[0])
               adjList[idx][1].push(corner1);
               adjList.push([corner1,[isInArr2[0]]]);
 
@@ -265,22 +264,12 @@ $(document).ready(function(){
               console.log('case4');
 
               //corner1 adj에 corner2 추가
-              var idx = -1;
-              for(var i=0; i<adjList.length; i++){
-                if(adjList[i][0].id == isInArr1[0].id ){
-                  idx = i;
-                }
-              }
-              adjList[idx][1].push(corner2);
+              var idx = adjListIdx(isInArr1[0])
+              adjList[idx][1].push(isInArr2[0]);
 
               //corner2 adj에 corner1 추가
-              idx = -1;
-              for(var i=0; i<adjList.length; i++){
-                if(adjList[i][0].id == isInArr2[0].id ){
-                  idx = i;
-                }
-              }
-              adjList[idx][1].push(corner1);
+              idx = adjListIdx(isInArr2[0])
+              adjList[idx][1].push(isInArr1[0]);
 
               wall = new Wall(isInArr1[0],isInArr2[0]);
               walls.push(wall);
@@ -425,6 +414,17 @@ $(document).ready(function(){
 
 
   //find room!!
+  function findRoom(path, adjList){
 
+    //now가 가장 마지막 corner 객체
+    var now = path.slice(-1);
+
+    //for(var i=0; i<)
+
+
+
+
+    return rooms;
+  }
 
 });
