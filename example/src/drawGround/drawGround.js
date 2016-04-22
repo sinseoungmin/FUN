@@ -189,28 +189,112 @@ $(document).ready(function(){
             draw();
           }
           else{
-            corner1 = new Corner(fixX,fixY);
-            corner2 = new Corner(ev._x,ev._y);
-            wall = new Wall(corner1,corner2);
 
-
-            //corner1 관련, 처음 찍는 corner가 기존에 있는지 없는지 check
-            var isInArr = $.grep(corners, function(e){
-                return  e.x == corner1.x && e.y == corner1.y
+            //corner1 = (fix), corner2 =(ev)
+            var isInArr1 = $.grep(corners, function(e){
+                return  e.x == fixX && e.y == fixY
             });
-            if(isInArr.length == 0){
+            var isInArr2 = $.grep(corners, function(e){
+                return  e.x == ev._x && e.y == ev._y
+            });
+
+            console.log(isInArr1);
+            console.log(isInArr2);
+
+            if(isInArr1.length == 0 && isInArr2.length == 0){
+              //corner1, corner2 둘 다 새로운 점인 경우
+              console.log('case1');
+
+              corner1 = new Corner(fixX,fixY);
+              corner2 = new Corner(ev._x,ev._y);
               corners.push(corner1);
+              corners.push(corner2);
+
+              adjList.push([corner1,[corner2]]);
+              adjList.push([corner2,[corner1]]);
+
+              wall = new Wall(corner1,corner2);
+              walls.push(wall);
+
+            }
+            else if(isInArr1.length > 0 && isInArr2.length == 0){
+              //corner1은 기존에 있었고, corner2는 새로운 점인 경우
+              console.log('case2');
+
+              corner2 = new Corner(ev._x,ev._y);
+              corners.push(corner2);
+
+              var idx = -1;
+              for(var i=0; i<adjList.length; i++){
+                if(adjList[i][0].id == isInArr1[0].id ){
+                  idx = i;
+                }
+              }
+
+              adjList[idx][1].push(corner2);
+              adjList.push([corner2,[isInArr1[0]]]);
+
+              wall = new Wall(isInArr1[0],corner2);
+              walls.push(wall);
+
+            }
+            else if(isInArr1.length == 0 && isInArr2.length > 0){
+              //corner2는 기존에 있었고, corner1은 새로운 점인 경우
+              console.log('case3');
+
+              corner1 = new Corner(fixX,fixY);
+              corners.push(corner1);
+
+              var idx = -1;
+              for(var i=0; i<adjList.length; i++){
+                if(adjList[i][0].id == isInArr2[0].id ){
+                  idx = i;
+                }
+              }
+
+              adjList[idx][1].push(corner1);
+              adjList.push([corner1,[isInArr2[0]]]);
+
+              wall = new Wall(corner1,isInArr2[0]);
+              walls.push(wall);
+
+
+            }
+            else{
+              //corner1, corner2 둘 다 기존에 있던 점인 경우
+              console.log('case4');
+
+              //corner1 adj에 corner2 추가
+              var idx = -1;
+              for(var i=0; i<adjList.length; i++){
+                if(adjList[i][0].id == isInArr1[0].id ){
+                  idx = i;
+                }
+              }
+              adjList[idx][1].push(corner2);
+
+              //corner2 adj에 corner1 추가
+              idx = -1;
+              for(var i=0; i<adjList.length; i++){
+                if(adjList[i][0].id == isInArr2[0].id ){
+                  idx = i;
+                }
+              }
+              adjList[idx][1].push(corner1);
+
+              wall = new Wall(isInArr1[0],isInArr2[0]);
+              walls.push(wall);
+
             }
 
+            console.log(adjList);
 
-            //corner2 관련
-            corners.push(corner2);
-            walls.push(wall);
-
+            //시작점을 현재 위치로
             fixX = ev._x;
             fixY = ev._y;
 
 
+            /* undomanager 일단 보류
             //undoManager 변수
             var c1 = corners[corners.length-2];
             var c2 = corners[corners.length-1];
@@ -238,6 +322,8 @@ $(document).ready(function(){
                 walls.push(w);
               }
             });
+            */
+
           }
         }
 
@@ -254,6 +340,8 @@ $(document).ready(function(){
         }
       }
 
+
+      //esc 누르면 그리기 끝냄
       $(document).keyup(function(e){
         if(e.keyCode == 27){
           self.started = false;
