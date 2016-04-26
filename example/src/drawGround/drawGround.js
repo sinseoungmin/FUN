@@ -1,3 +1,4 @@
+var utils = require('../util2')
 
 $(document).ready(function(){
 
@@ -9,14 +10,7 @@ $(document).ready(function(){
   var fillColor = color;
   var tolerance = 10;
 
-
-  //공통 함수 --------------------------------
-  function forEach(array, action) {
-    for (var i = 0; i < array.length; i++) {
-      action(array[i]);
-    }
-  }
-
+  //adjList에서 해당 corner 객체의 index를 가져옴.
   function adjListIdx(corner){
     var idx = -1;
     for(var i=0; i<adjList.length; i++){
@@ -28,63 +22,11 @@ $(document).ready(function(){
   }
 
 
-  //고유 id 생성
-  var guid = (function() {
-    function s4() {
-      return Math.floor((1 + Math.random()) * 0x10000)
-                 .toString(16)
-                 .substring(1);
-    }
-    return function() {
-      return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-             s4() + '-' + s4() + s4() + s4();
-    };
-  })();
-
-  function distance( x1, y1, x2, y2 ) {
-  	return Math.sqrt(
-  		Math.pow(x2 - x1, 2) +
-  		Math.pow(y2 - y1, 2));
-  }
-  function closestPointOnLine(x, y, wall) {
-    var A = x - wall.start.x;
-    var B = y - wall.start.y;
-    var C = wall.end.x - wall.start.x;
-    var D = wall.end.y - wall.start.y;
-
-    var dot = A * C + B * D;
-    var len_sq = C * C + D * D;
-    var param = dot / len_sq;
-
-    var xx, yy;
-
-    if (param < 0 || (wall.start.x == wall.end.x && wall.start.y == wall.end.y)) {
-      xx = wall.start.x;
-      yy = wall.start.y;
-    } else if (param > 1) {
-      xx = wall.end.x;
-      yy = wall.end.y;
-    } else {
-      xx = wall.start.x + param * C;
-      yy = wall.start.y + param * D;
-    }
-
-    return {
-      x: xx,
-      y: yy
-    }
-  }
-  function pointDistanceFromLine( x, y, wall ) {
-    var point = closestPointOnLine(x, y, wall);
-  	return distance(x,y,point.x,point.y);
-  }
-
-
   //클래스: corner, wall, room ---------------
   var Corner = function(x,y){
     this.x = x;
     this.y = y;
-    this.id = guid();
+    this.id = utils.guid();
   }
   //start,end 는 corner 객체
   var Wall = function(start,end){
@@ -168,7 +110,7 @@ $(document).ready(function(){
       this.mousedown = function (ev){
 
         //기존에 있는 corner나 wall와 거리가 가까울 때 해당 코너로 인식
-        forEach(corners,function(c){
+        utils.forEach(corners,function(c){
           if(Math.abs(c.x - ev._x) < tolerance){
             ev._x = c.x;
           }
@@ -176,9 +118,9 @@ $(document).ready(function(){
             ev._y = c.y;
           }
         });
-        forEach(walls,function(w){
-          if(pointDistanceFromLine(ev._x, ev._y, w) < tolerance ){
-            var point = closestPointOnLine(ev._x, ev._y, w);
+        utils.forEach(walls,function(w){
+          if(utils.pointDistanceFromLine(ev._x, ev._y, w) < tolerance ){
+            var point = utils.closestPointOnLine(ev._x, ev._y, w);
             ev._x = point.x;
             ev._y = point.y;
           }
@@ -209,22 +151,22 @@ $(document).ready(function(){
                 return  e.x == ev._x && e.y == ev._y
             });
 
-            console.log(isInArr1);
-            console.log(isInArr2);
+            // console.log(isInArr1);
+            // console.log(isInArr2);
 
             if(isInArr1.length == 0 && isInArr2.length == 0){
               //corner1, corner2 둘 다 새로운 점인 경우
               console.log('case1');
 
-              corner1 = new Corner(fixX,fixY);
-              corner2 = new Corner(ev._x,ev._y);
+              var corner1 = new Corner(fixX,fixY);
+              var corner2 = new Corner(ev._x,ev._y);
               corners.push(corner1);
               corners.push(corner2);
 
               adjList.push([corner1,[corner2]]);
               adjList.push([corner2,[corner1]]);
 
-              wall = new Wall(corner1,corner2);
+              var wall = new Wall(corner1,corner2);
               walls.push(wall);
 
             }
@@ -247,14 +189,14 @@ $(document).ready(function(){
               //corner2는 기존에 있었고, corner1은 새로운 점인 경우
               console.log('case3');
 
-              corner1 = new Corner(fixX,fixY);
+              var corner1 = new Corner(fixX,fixY);
               corners.push(corner1);
 
               var idx = adjListIdx(isInArr2[0])
               adjList[idx][1].push(corner1);
               adjList.push([corner1,[isInArr2[0]]]);
 
-              wall = new Wall(corner1,isInArr2[0]);
+              var wall = new Wall(corner1,isInArr2[0]);
               walls.push(wall);
 
 
@@ -271,7 +213,7 @@ $(document).ready(function(){
               idx = adjListIdx(isInArr2[0])
               adjList[idx][1].push(isInArr1[0]);
 
-              wall = new Wall(isInArr1[0],isInArr2[0]);
+              var wall = new Wall(isInArr1[0],isInArr2[0]);
               walls.push(wall);
 
             }
@@ -365,8 +307,8 @@ $(document).ready(function(){
   //그리기 함수
   function draw (){
     context.clearRect(0,0,canvas.width, canvas.height);
-    forEach(corners,drawCorner);
-    forEach(walls,drawWall);
+    utils.forEach(corners,drawCorner);
+    utils.forEach(walls,drawWall);
     if(!!self.started){
       drawLine(fixX,fixY,mouseX,mouseY );
     }
@@ -414,17 +356,17 @@ $(document).ready(function(){
 
 
   //find room!!
-  function findRoom(path, adjList){
+  function findRoom(path){
 
     //now가 가장 마지막 corner 객체
     var now = path.slice(-1);
+    var idx = adjListIdx(now);
 
-    //for(var i=0; i<)
+    for(var i=0; i < adjList[idx][1].length; i++){
+      path.push(adjList[idx][1][i]);
+      findRoom(path);
+    }
 
-
-
-
-    return rooms;
   }
 
 });
