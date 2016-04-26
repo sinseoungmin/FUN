@@ -6,6 +6,15 @@ utils.forEach = function(array, action) {
   }
 }
 
+utils.removeArrByIdxs = function(rmIdxs,array){
+  rmIdxs.sort();
+  for(var i = 0;i < rmIdxs.length; i++){
+    var rmIdx = rmIdxs[i] - i;
+    array.splice(rmIdx,1);
+  }
+
+  return array;
+}
 
 //고유 id 생성
 utils.guid = (function() {

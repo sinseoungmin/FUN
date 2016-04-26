@@ -37,6 +37,11 @@ $(document).ready(function(){
   //corners는 corner 객체들의 배열
   var Room = function(corners){
     this.corners = corners;
+    var id = '';
+    for(var i=0; i<corners.length;i++){
+      id = [id,corner[i].id].join();
+    }
+    this.id = id;
   }
 
 
@@ -54,7 +59,6 @@ $(document).ready(function(){
 
   var adjList = [];
   var rooms = [];
-
 
 
   //undomanager --------------------------
@@ -151,8 +155,9 @@ $(document).ready(function(){
                 return  e.x == ev._x && e.y == ev._y
             });
 
-            // console.log(isInArr1);
-            // console.log(isInArr2);
+            console.log(isInArr1);
+            console.log(isInArr2);
+
 
             if(isInArr1.length == 0 && isInArr2.length == 0){
               //corner1, corner2 둘 다 새로운 점인 경우
@@ -169,6 +174,7 @@ $(document).ready(function(){
               var wall = new Wall(corner1,corner2);
               walls.push(wall);
 
+              findRoom([corner1, corner2]);
             }
             else if(isInArr1.length > 0 && isInArr2.length == 0){
               //corner1은 기존에 있었고, corner2는 새로운 점인 경우
@@ -184,6 +190,7 @@ $(document).ready(function(){
               wall = new Wall(isInArr1[0],corner2);
               walls.push(wall);
 
+              findRoom([isInArr1[0],corner2]);
             }
             else if(isInArr1.length == 0 && isInArr2.length > 0){
               //corner2는 기존에 있었고, corner1은 새로운 점인 경우
@@ -199,7 +206,7 @@ $(document).ready(function(){
               var wall = new Wall(corner1,isInArr2[0]);
               walls.push(wall);
 
-
+              findRoom([corner1,isInArr2[0]]);
             }
             else{
               //corner1, corner2 둘 다 기존에 있던 점인 경우
@@ -216,13 +223,19 @@ $(document).ready(function(){
               var wall = new Wall(isInArr1[0],isInArr2[0]);
               walls.push(wall);
 
+              findRoom([isInArr1[0],isInArr2[0]]);
+
             }
 
+            console.log(corners);
             console.log(adjList);
+            console.log(rooms);
+            //console.log(rooms);
 
             //시작점을 현재 위치로
             fixX = ev._x;
             fixY = ev._y;
+
 
 
             /* undomanager 일단 보류
@@ -356,16 +369,59 @@ $(document).ready(function(){
 
 
   //find room!!
-  function findRoom(path){
-
+  function findRoom(cArr){
+    console.log('findroom--------');
+    console.log(cArr);
+    var path =[];
+    for(var i=0; i< cArr.length; i++){
+      path.push(cArr[i]);
+      findPath(path);
+    }
+  }
+  function findPath(path){
     //now가 가장 마지막 corner 객체
     var now = path.slice(-1);
     var idx = adjListIdx(now);
 
-    for(var i=0; i < adjList[idx][1].length; i++){
-      path.push(adjList[idx][1][i]);
-      findRoom(path);
+    console.log('now:'+now);
+    console.log('idx:'+idx);
+
+    if(idx == -1){
+      // console.log('adjlist에 값이 없음');
+      return;
     }
+    else{
+      var adjCorners = adjList[idx][1];
+      var rmArr = [];
+
+      for(var i=0; i < adjCorners.length; i++){
+
+        //인접 corners에서 현재 path에 속해있는 것들은 제외 시켜야 함
+        var rmIdx = path.indexOf(adjCorners[i]);
+
+        if(rmIdx >= 0 ){
+          //path 길이가 2보다 크고, 인접 corner가 처음 시작 지점인 경우 -> room
+          if(rmIdx == 0 && path.length > 2){
+            rooms.push(path);
+          }
+
+          rmArr.push(rmIdx);
+        }
+      }
+
+      var newArr = utils.removeArrByIdxs(rmArr,adjCorners);
+
+      if(newArr.length == 0){
+        return;
+      }
+      else{
+        for(var i=0; i < newArr.length; i++){
+          path.push(newArr[i]);
+          findPath(path);
+        }
+      }
+    }
+
 
   }
 
