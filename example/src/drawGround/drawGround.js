@@ -39,7 +39,7 @@ $(document).ready(function(){
     this.corners = corners;
     var id = '';
     for(var i=0; i<corners.length;i++){
-      id = [id,corner[i].id].join();
+      id = [id,corners[i].id].join();
     }
     this.id = id;
   }
@@ -61,23 +61,24 @@ $(document).ready(function(){
   var rooms = [];
 
 
-  //undomanager --------------------------
-  var undoManager = new UndoManager();
+  /* undomanager --------------------------
+    var undoManager = new UndoManager();
 
-  $('#undoB').click(function(){
-    undoManager.undo();
-    self.started = false;
-    mouseX = '';
-    mouseY = '';
-    draw();
-  });
-  $('#redoB').click(function(){
-    undoManager.redo();
-    self.started = false;
-    mouseX = '';
-    mouseY = '';
-    draw();
-  });
+    $('#undoB').click(function(){
+      undoManager.undo();
+      self.started = false;
+      mouseX = '';
+      mouseY = '';
+      draw();
+    });
+    $('#redoB').click(function(){
+      undoManager.redo();
+      self.started = false;
+      mouseX = '';
+      mouseY = '';
+      draw();
+    });
+  */
 
 
 
@@ -111,35 +112,40 @@ $(document).ready(function(){
       var tool = this;
 
 
-      this.mousedown = function (ev){
+      this.mousedown = function (mdev){
 
         //기존에 있는 corner나 wall와 거리가 가까울 때 해당 코너로 인식
+        var nearCorner = false;
+
         utils.forEach(corners,function(c){
-          if(Math.abs(c.x - ev._x) < tolerance){
-            ev._x = c.x;
-          }
-          if(Math.abs(c.y - ev._y) < tolerance){
-            ev._y = c.y;
-          }
-        });
-        utils.forEach(walls,function(w){
-          if(utils.pointDistanceFromLine(ev._x, ev._y, w) < tolerance ){
-            var point = utils.closestPointOnLine(ev._x, ev._y, w);
-            ev._x = point.x;
-            ev._y = point.y;
+          if(Math.abs(c.x - mdev._x) < tolerance && Math.abs(c.y - mdev._y) < tolerance ){
+            mdev._x = c.x;
+            mdev._y = c.y;
+
+            nearCorner = true;
           }
         });
+        if(!nearCorner){
+          utils.forEach(walls,function(w){
+            if(utils.pointDistanceFromLine(mdev._x, mdev._y, w) < tolerance ){
+              var point = utils.closestPointOnLine(mdev._x, mdev._y, w);
+              mdev._x = point.x;
+              mdev._y = point.y;
+            }
+          });
+        }
+
 
         //첫 클릭인지 확인
         if(!self.started){
-          fixX = ev._x;
-          fixY = ev._y;
+          fixX = mdev._x;
+          fixY = mdev._y;
 
           self.started = true;
         }
         else{
           //같은 위치 두 번 클릭할 경우 그리기 종료
-          if(Math.abs(fixX - ev._x) < tolerance && Math.abs(fixY - ev._y) < tolerance){
+          if(Math.abs(fixX - mdev._x) < tolerance && Math.abs(fixY - mdev._y) < tolerance){
             self.started = false;
             mouseX = '';
             mouseY = '';
@@ -147,24 +153,20 @@ $(document).ready(function(){
           }
           else{
 
-            //corner1 = (fix), corner2 =(ev)
+            //corner1 = (fix), corner2 =(mdev)
             var isInArr1 = $.grep(corners, function(e){
                 return  e.x == fixX && e.y == fixY
             });
             var isInArr2 = $.grep(corners, function(e){
-                return  e.x == ev._x && e.y == ev._y
+                return  e.x == mdev._x && e.y == mdev._y
             });
-
-            console.log(isInArr1);
-            console.log(isInArr2);
 
 
             if(isInArr1.length == 0 && isInArr2.length == 0){
               //corner1, corner2 둘 다 새로운 점인 경우
-              console.log('case1');
 
               var corner1 = new Corner(fixX,fixY);
-              var corner2 = new Corner(ev._x,ev._y);
+              var corner2 = new Corner(mdev._x,mdev._y);
               corners.push(corner1);
               corners.push(corner2);
 
@@ -178,9 +180,8 @@ $(document).ready(function(){
             }
             else if(isInArr1.length > 0 && isInArr2.length == 0){
               //corner1은 기존에 있었고, corner2는 새로운 점인 경우
-              console.log('case2');
 
-              corner2 = new Corner(ev._x,ev._y);
+              corner2 = new Corner(mdev._x,mdev._y);
               corners.push(corner2);
 
               var idx = adjListIdx(isInArr1[0])
@@ -210,7 +211,6 @@ $(document).ready(function(){
             }
             else{
               //corner1, corner2 둘 다 기존에 있던 점인 경우
-              console.log('case4');
 
               //corner1 adj에 corner2 추가
               var idx = adjListIdx(isInArr1[0])
@@ -230,42 +230,40 @@ $(document).ready(function(){
             console.log(corners);
             console.log(adjList);
             console.log(rooms);
-            //console.log(rooms);
 
             //시작점을 현재 위치로
-            fixX = ev._x;
-            fixY = ev._y;
-
+            fixX = mdev._x;
+            fixY = mdev._y;
 
 
             /* undomanager 일단 보류
-            //undoManager 변수
-            var c1 = corners[corners.length-2];
-            var c2 = corners[corners.length-1];
-            var w  = walls[walls.length-1];
+              //undoManager 변수
+              var c1 = corners[corners.length-2];
+              var c2 = corners[corners.length-1];
+              var w  = walls[walls.length-1];
 
-            undoManager.add({
-              undo:function(){
-                if(corners.length == 2){
-                  corners.splice(0,2);
-                }
-                else{
-                  corners.splice(corners.length-1,1);
-                }
-                walls.splice(walls.length-1,1);
-              },
-              redo:function(){
-                if(corners.length == 0){
-                  corners.push(c1);
-                  corners.push(c2);
-                }
-                else{
-                  corners.push(c2);
-                }
+              undoManager.add({
+                undo:function(){
+                  if(corners.length == 2){
+                    corners.splice(0,2);
+                  }
+                  else{
+                    corners.splice(corners.length-1,1);
+                  }
+                  walls.splice(walls.length-1,1);
+                },
+                redo:function(){
+                  if(corners.length == 0){
+                    corners.push(c1);
+                    corners.push(c2);
+                  }
+                  else{
+                    corners.push(c2);
+                  }
 
-                walls.push(w);
-              }
-            });
+                  walls.push(w);
+                }
+              });
             */
 
           }
@@ -370,58 +368,62 @@ $(document).ready(function(){
 
   //find room!!
   function findRoom(cArr){
-    console.log('findroom--------');
-    console.log(cArr);
+    console.log('findroom-----------------------------');
     var path =[];
     for(var i=0; i< cArr.length; i++){
       path.push(cArr[i]);
       findPath(path);
+
+      path = [];
+      console.log('-----------------------------:    '+ i);
     }
   }
   function findPath(path){
     //now가 가장 마지막 corner 객체
     var now = path.slice(-1);
-    var idx = adjListIdx(now);
+    var idx = adjListIdx(now[0]);
 
-    console.log('now:'+now);
-    console.log('idx:'+idx);
+    console.log(path);
 
     if(idx == -1){
-      // console.log('adjlist에 값이 없음');
+      console.log('인접 corner가 없음');
       return;
     }
     else{
-      var adjCorners = adjList[idx][1];
-      var rmArr = [];
+      var adjCorners = adjList[idx][1].slice();
 
-      for(var i=0; i < adjCorners.length; i++){
+      console.log('adjcorner');
+      console.log(adjCorners);
 
-        //인접 corners에서 현재 path에 속해있는 것들은 제외 시켜야 함
-        var rmIdx = path.indexOf(adjCorners[i]);
 
-        if(rmIdx >= 0 ){
-          //path 길이가 2보다 크고, 인접 corner가 처음 시작 지점인 경우 -> room
-          if(rmIdx == 0 && path.length > 2){
-            rooms.push(path);
-          }
+      for(var i =0; i < adjCorners.length; i++){
 
-          rmArr.push(rmIdx);
-        }
-      }
+        if(path.indexOf(adjCorners[i]) < 0  ){
 
-      var newArr = utils.removeArrByIdxs(rmArr,adjCorners);
+          console.log('기존 path에 없는 corner');
 
-      if(newArr.length == 0){
-        return;
-      }
-      else{
-        for(var i=0; i < newArr.length; i++){
-          path.push(newArr[i]);
+          path.push(adjCorners[i]);
           findPath(path);
+
+          console.log('돌아왔다');
+          path.splice(path.length-1,1);
+        }
+        else if(path.indexOf(adjCorners[i]) == 0 && path.length > 2){
+          var pathCopy = path.slice();
+          var room = new Room(pathCopy);
+          console.log('room에 포함!!')
+          console.log(path);
+          console.log(room)
+          rooms.push(room);
+        }
+        else{
+          console.log('기존 path에 있던 코너라서 아무것도 안함');
         }
       }
-    }
 
+      return;
+
+    }
 
   }
 
