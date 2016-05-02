@@ -419,7 +419,7 @@ $(document).ready(function(){
         else if(path.indexOf(adjCorners[i]) == 0 && path.length > 2){
           var pathCopy = path.slice();
 
-          //check already in rooms
+          //check already in rooms(same corner, different order)
           if(!isInRooms(pathCopy)){
 
             //make path clockwise-order
@@ -434,13 +434,29 @@ $(document).ready(function(){
               cwPath = pathCopy.slice();
             }
 
-            //is there room with same angle?
-            var rmIdxs = checkByAngle(cwPath);
-            if(rmIdxs.length != 0){
+            utils.consoleLog('cwpath');
+            utils.consoleLog(cwPath);
 
-              //make room!!
+            //is there room with same angle?
+            var total = checkByAngle(cwPath);
+
+            if(!total[0]){
+              //new angle!!
               var room = new Room(cwPath);
               rooms.push(room);
+            }
+            else{
+              //existing angle
+              if(!total[1]){
+                //smaller polygon, so remove exist room and make new room
+                utils.removeArrByIdxs(total[2],rooms);
+
+                var room = new Room(cwPath);
+                rooms.push(room);
+              }
+              else{
+                //bigger polygon
+              }
             }
 
           }
@@ -478,13 +494,14 @@ $(document).ready(function(){
   }
 
   function checkByAngle(path){
+    var hasSameAngle = false;
+    var isBigger = false;
     var rmIdxs = [];
-    var getInFlag = true;
 
     for(var i=0; i<rooms.length; i++){
       var idArr = rooms[i].idArr;
 
-
+      jLoop:
       for(var j=0; j<idArr.length; j++){
 
         var id1 = idArr[j];
@@ -500,7 +517,6 @@ $(document).ready(function(){
           var id2 = idArr[j+1];
           var id3 = idArr[j+2];
         }
-
 
         for(var k=0; k<path.length; k++){
 
@@ -520,30 +536,26 @@ $(document).ready(function(){
 
           //three connected corner(angle) is same
           if(id1 == p1.id && id2 == p2.id && id3 == p3.id){
-            console.log('angle:' + id1 + id2 + id3);
+            utils.consoleLog('angle:' + id1 + id2 + id3);
+            hasSameAngle = true;
 
             //compare area between existing room and new path
             if(rooms[i].area >= utils.polygonArea(path)){
-              console.log('기존이 더 큼');
               rmIdxs.push(i);
             }
             else{
-              console.log('새로운 게 더 큼');
-              getInFlag = false;
+              isBigger = true;
             }
+
+            break jLoop;
           }
 
         }//k
       }//j
     }//i
 
-    //new path can't get in rooms
-    if(!getInFlag){
-      return [];
-    }
-    else{
-      return rmIdxs;
-    }
+    var total = [hasSameAngle, isBigger, rmIdxs];
+    return total;
   }
 
 });
