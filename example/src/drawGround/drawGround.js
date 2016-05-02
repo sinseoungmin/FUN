@@ -37,11 +37,16 @@ $(document).ready(function(){
   //corners는 corner 객체들의 배열
   var Room = function(corners){
     this.corners = corners;
-    var id = '';
+    var id = [];
     for(var i=0; i<corners.length;i++){
-      id = [id,corners[i].id].join();
+      id.push(corners[i].id);
     }
-    this.id = id;
+    this.id = id.join();
+
+    //for checking duplicate rooms
+    var sortId = id.slice();
+    sortId.sort();
+    this.sortId = sortId.join();
   }
 
 
@@ -79,7 +84,6 @@ $(document).ready(function(){
       draw();
     });
   */
-
 
 
   function InitEvent (){
@@ -283,7 +287,7 @@ $(document).ready(function(){
       }
 
 
-      //esc 누르면 그리기 끝냄
+      //esc -> ends draw mode
       $(document).keyup(function(e){
         if(e.keyCode == 27){
           self.started = false;
@@ -295,7 +299,7 @@ $(document).ready(function(){
   }
 
 
-  //좌표 설정
+  //coordinate setting
   function ev_canvas (ev){
       if (ev.layerX || ev.layerX == 0){
         // Firefox 브라우저
@@ -315,7 +319,7 @@ $(document).ready(function(){
   }
 
 
-  //그리기 함수
+  //draw functions ------------------------------------------
   function draw (){
     context.clearRect(0,0,canvas.width, canvas.height);
     utils.forEach(corners,drawCorner);
@@ -366,65 +370,80 @@ $(document).ready(function(){
   }
 
 
-  //find room!!
+  //find room functions ---------------------------------------
   function findRoom(cArr){
-    console.log('findroom-----------------------------');
     var path =[];
     for(var i=0; i< cArr.length; i++){
       path.push(cArr[i]);
       findPath(path);
-
       path = [];
-      console.log('-----------------------------:    '+ i);
     }
   }
   function findPath(path){
-    //now가 가장 마지막 corner 객체
+
     var now = path.slice(-1);
     var idx = adjListIdx(now[0]);
 
-    console.log(path);
-
     if(idx == -1){
-      console.log('인접 corner가 없음');
+      console.log('no adjcorners');
       return;
     }
     else{
       var adjCorners = adjList[idx][1].slice();
 
-      console.log('adjcorner');
-      console.log(adjCorners);
-
-
       for(var i =0; i < adjCorners.length; i++){
 
         if(path.indexOf(adjCorners[i]) < 0  ){
-
-          console.log('기존 path에 없는 corner');
+          console.log('new corner!');
 
           path.push(adjCorners[i]);
           findPath(path);
 
-          console.log('돌아왔다');
+          console.log('comeback!');
           path.splice(path.length-1,1);
+
         }
         else if(path.indexOf(adjCorners[i]) == 0 && path.length > 2){
+
           var pathCopy = path.slice();
-          var room = new Room(pathCopy);
-          console.log('room에 포함!!')
-          console.log(path);
-          console.log(room)
-          rooms.push(room);
+
+          //check duplicate
+          if(!isInRooms(pathCopy)){
+            var room = new Room(pathCopy);
+            console.log('room is made')
+            console.log(room)
+            rooms.push(room);
+          }
+          else{
+            console.log('this path is already in the rooms');
+          }
+
         }
         else{
-          console.log('기존 path에 있던 코너라서 아무것도 안함');
+          console.log('visited corner');
         }
+
       }
 
       return;
 
     }
 
+  }
+  function isInRooms(path){
+    var check = false
+    var sortId = [];
+
+    for(var i=0; i<path.length;i++){
+      sortId.push(path[i].id);
+    }
+    sortId.sort();
+
+    for(var i=0; i<rooms.length; i++){
+      if(sortId == rooms[i].sortId) check = true;
+    }
+
+    return check;
   }
 
 });

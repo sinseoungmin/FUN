@@ -16,18 +16,25 @@ utils.removeArrByIdxs = function(rmIdxs,array){
   return array;
 }
 
-//고유 id 생성
-utils.guid = (function() {
-  function s4() {
-    return Math.floor((1 + Math.random()) * 0x10000)
-               .toString(16)
-               .substring(1);
-  }
-  return function() {
-    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-           s4() + '-' + s4() + s4() + s4();
-  };
-})();
+//고유 id 생성 (연습용 1~n)
+/*
+  utils.guid = (function() {
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+                 .toString(16)
+                 .substring(1);
+    }
+    return function() {
+      return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+             s4() + '-' + s4() + s4() + s4();
+    };
+  })();
+*/
+utils.number = 0;
+utils.guid = function(){
+  utils.number += 1;
+  return utils.number;
+}
 
 
 //distance 관련 함수
