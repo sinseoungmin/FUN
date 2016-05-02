@@ -4,7 +4,6 @@ $(document).ready(function(){
 
   //settings ------------------------------
   var color = '#ffa500';
-  var roomColor = '#8afcff';
   var radius = 5;
   var lineWidth = 5;
   var fillColor = color;
@@ -36,6 +35,8 @@ $(document).ready(function(){
   }
   //corners는 corner 객체들의 배열
   var Room = function(corners){
+    this.color = '#'+utils.randHexColor();
+
     this.corners = corners;
     var id = [];
     for(var i=0; i<corners.length;i++){
@@ -199,7 +200,7 @@ $(document).ready(function(){
             }
             else if(isInArr1.length == 0 && isInArr2.length > 0){
               //corner2는 기존에 있었고, corner1은 새로운 점인 경우
-              console.log('case3');
+              utils.consoleLog('case3');
 
               var corner1 = new Corner(fixX,fixY);
               corners.push(corner1);
@@ -231,9 +232,9 @@ $(document).ready(function(){
 
             }
 
-            console.log(corners);
-            console.log(adjList);
-            console.log(rooms);
+            utils.consoleLog(corners);
+            utils.consoleLog(adjList);
+            utils.consoleLog(rooms);
 
             //시작점을 현재 위치로
             fixX = mdev._x;
@@ -273,10 +274,11 @@ $(document).ready(function(){
           }
         }
 
+        draw();
       }
 
       this.mousemove = function (ev){
-        //console.log(self.started);
+        //utils.consoleLog(self.started);
         mouseX = ev._x;
         mouseY = ev._y;
 
@@ -324,6 +326,7 @@ $(document).ready(function(){
     context.clearRect(0,0,canvas.width, canvas.height);
     utils.forEach(corners,drawCorner);
     utils.forEach(walls,drawWall);
+    utils.forEach(rooms,drawRoom);
     if(!!self.started){
       drawLine(fixX,fixY,mouseX,mouseY );
     }
@@ -362,7 +365,7 @@ $(document).ready(function(){
       context.lineTo(corners[i].x,corners[i].y);
     }
     context.closePath();
-    context.fillStyle = roomColor;
+    context.fillStyle = room.color;
     context.fill();
     context.lineWidth = lineWidth;
     context.strokeStyle = color;
@@ -385,7 +388,7 @@ $(document).ready(function(){
     var idx = adjListIdx(now[0]);
 
     if(idx == -1){
-      console.log('no adjcorners');
+      utils.consoleLog('no adjcorners');
       return;
     }
     else{
@@ -394,33 +397,44 @@ $(document).ready(function(){
       for(var i =0; i < adjCorners.length; i++){
 
         if(path.indexOf(adjCorners[i]) < 0  ){
-          console.log('new corner!');
+          utils.consoleLog('new corner!');
 
           path.push(adjCorners[i]);
           findPath(path);
 
-          console.log('comeback!');
+          utils.consoleLog('comeback!');
           path.splice(path.length-1,1);
 
         }
         else if(path.indexOf(adjCorners[i]) == 0 && path.length > 2){
-
           var pathCopy = path.slice();
 
-          //check duplicate
+          //check already in rooms
           if(!isInRooms(pathCopy)){
-            var room = new Room(pathCopy);
-            console.log('room is made')
-            console.log(room)
+
+            //make clockwise path
+            var cwPath = [];
+            if(!utils.isClockwise(pathCopy)){
+              cwPath.push(pathCopy[0]);
+              for(var j=1; j<pathCopy.length; j++){
+                cwPath.push(pathCopy[pathCopy.length-j]);
+              }
+            }
+            else{
+              cwPath = pathCopy.slice();
+            }
+
+            var room = new Room(cwPath);
             rooms.push(room);
+
           }
           else{
-            console.log('this path is already in the rooms');
+            utils.consoleLog('this path is already in the rooms');
           }
 
         }
         else{
-          console.log('visited corner');
+          utils.consoleLog('visited corner');
         }
 
       }

@@ -78,4 +78,73 @@ utils.pointDistanceFromLine = function( x, y, wall ) {
 	return utils.distance(x,y,point.x,point.y);
 }
 
+utils.randKey = function(num){
+  var arraySet = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
+  'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','W','T','U','V','W','X','Y','Z',
+  '0','1','2','3','4','5','6','7','8','9']
+  var rN = '';
+  for(var i=0; i<num; i++){
+    var randIndex = Math.floor(Math.random()*arraySet.length);
+    rN += arraySet[randIndex];
+  }
+  return rN
+}
+
+utils.randHexColor = function(){
+  var arraySet = ['a','b','c','d','e','f','0','1','2','3','4','5','6','7','8','9']
+  var rN = '';
+  for(var i=0; i<6; i++){
+    var randIndex = Math.floor(Math.random()*arraySet.length);
+    rN += arraySet[randIndex];
+  }
+  return rN
+}
+
+utils.map = function(array, func) {
+  var result = [];
+  utils.forEach(array, function (element) {
+    result.push(func(element));
+  });
+  return result;
+}
+
+// points is array of points with x,y attributes
+utils.isClockwise = function( points ) {
+    // make positive
+    var subX = Math.min(0, Math.min.apply(null, utils.map(points, function(p) {
+      return p.x;
+    })))
+    var subY = Math.min(0, Math.min.apply(null, utils.map(points, function(p) {
+      return p.x;
+    })))
+    var newPoints = utils.map(points, function(p) {
+      return {
+        x: p.x - subX,
+        y: p.y - subY
+      }
+    })
+
+    // determine CW/CCW, based on:
+    // http://stackoverflow.com/questions/1165647
+    // update(2016.5.2): sum <=0 --> clockwise
+    var sum = 0;
+    for ( var i = 0; i < newPoints.length; i++ ) {
+        var c1 = newPoints[i];
+        if (i == newPoints.length-1) {
+            var c2 = newPoints[0]
+        } else {
+            var c2 = newPoints[i+1];
+        }
+        sum += (c2.x - c1.x) * (c2.y + c1.y);
+    }
+    return (sum <= 0);
+}
+
+
+
+
+utils.consoleLog = function(a){
+  //console.log(a);
+}
+
 module.exports = utils;
