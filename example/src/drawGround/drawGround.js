@@ -2,6 +2,7 @@ var utils = require('../util2')
 
 $(document).ready(function(){
 
+
   //settings ------------------------------
   var color = '#ffa500';
   var radius = 5;
@@ -36,18 +37,21 @@ $(document).ready(function(){
   //corners는 corner 객체들의 배열
   var Room = function(corners){
     this.color = '#'+utils.randHexColor();
-
     this.corners = corners;
+    this.area = utils.polygonArea(corners);
+
     var id = [];
     for(var i=0; i<corners.length;i++){
       id.push(corners[i].id);
     }
-    this.id = id.join();
+    this.idArr = id;
+    this.idText = id.join();
 
-    //for checking duplicate rooms
+    //for checking isInRooms
     var sortId = id.slice();
     sortId.sort();
     this.sortId = sortId.join();
+
   }
 
 
@@ -275,6 +279,8 @@ $(document).ready(function(){
         }
 
         draw();
+
+        console.log(rooms);
       }
 
       this.mousemove = function (ev){
@@ -374,6 +380,8 @@ $(document).ready(function(){
 
 
   //find room functions ---------------------------------------
+
+  //cArr is consist of corner objects
   function findRoom(cArr){
     var path =[];
     for(var i=0; i< cArr.length; i++){
@@ -382,6 +390,7 @@ $(document).ready(function(){
       path = [];
     }
   }
+
   function findPath(path){
 
     var now = path.slice(-1);
@@ -394,10 +403,11 @@ $(document).ready(function(){
     else{
       var adjCorners = adjList[idx][1].slice();
 
+
       for(var i =0; i < adjCorners.length; i++){
 
+        //new corner
         if(path.indexOf(adjCorners[i]) < 0  ){
-          utils.consoleLog('new corner!');
 
           path.push(adjCorners[i]);
           findPath(path);
@@ -412,7 +422,7 @@ $(document).ready(function(){
           //check already in rooms
           if(!isInRooms(pathCopy)){
 
-            //make clockwise path
+            //make path clockwise-order
             var cwPath = [];
             if(!utils.isClockwise(pathCopy)){
               cwPath.push(pathCopy[0]);
@@ -424,8 +434,14 @@ $(document).ready(function(){
               cwPath = pathCopy.slice();
             }
 
-            var room = new Room(cwPath);
-            rooms.push(room);
+            //is there room with same angle?
+            var rmIdxs = checkByAngle(cwPath);
+            if(rmIdxs.length != 0){
+
+              //make room!!
+              var room = new Room(cwPath);
+              rooms.push(room);
+            }
 
           }
           else{
@@ -444,6 +460,7 @@ $(document).ready(function(){
     }
 
   }
+
   function isInRooms(path){
     var check = false
     var sortId = [];
@@ -458,6 +475,75 @@ $(document).ready(function(){
     }
 
     return check;
+  }
+
+  function checkByAngle(path){
+    var rmIdxs = [];
+    var getInFlag = true;
+
+    for(var i=0; i<rooms.length; i++){
+      var idArr = rooms[i].idArr;
+
+
+      for(var j=0; j<idArr.length; j++){
+
+        var id1 = idArr[j];
+        if(j==idArr.length-2){
+          var id2 = idArr[j+1];
+          var id3 = idArr[0];
+        }
+        else if(j==idArr.length-1){
+          var id2 = idArr[0];
+          var id3 = idArr[1];
+        }
+        else{
+          var id2 = idArr[j+1];
+          var id3 = idArr[j+2];
+        }
+
+
+        for(var k=0; k<path.length; k++){
+
+          var p1 = path[k];
+          if(k == path.length-2){
+            var p2 = path[k+1];
+            var p3 = path[0];
+          }
+          else if(k == path.length-1){
+            var p2 = path[0];
+            var p3 = path[1];
+          }
+          else{
+            var p2 = path[k+1];
+            var p3 = path[k+2];
+          }
+
+          //three connected corner(angle) is same
+          if(id1 == p1.id && id2 == p2.id && id3 == p3.id){
+            console.log('angle:' + id1 + id2 + id3);
+
+            //compare area between existing room and new path
+            if(rooms[i].area >= utils.polygonArea(path)){
+              console.log('기존이 더 큼');
+              rmIdxs.push(i);
+            }
+            else{
+              console.log('새로운 게 더 큼');
+              getInFlag = false;
+            }
+          }
+
+        }//k
+      }//j
+    }//i
+
+    //new path can't get in rooms
+    if(!getInFlag){
+      return [];
+    }
+    else{
+      return rmIdxs;
+    }
   }
 
 });

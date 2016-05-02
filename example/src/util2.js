@@ -13,7 +13,6 @@ utils.removeArrByIdxs = function(rmIdxs,array){
     array.splice(rmIdx,1);
   }
 
-  return array;
 }
 
 //고유 id 생성 (연습용 1~n)
@@ -108,6 +107,7 @@ utils.map = function(array, func) {
   return result;
 }
 
+
 // points is array of points with x,y attributes
 utils.isClockwise = function( points ) {
     // make positive
@@ -126,12 +126,12 @@ utils.isClockwise = function( points ) {
 
     // determine CW/CCW, based on:
     // http://stackoverflow.com/questions/1165647
-    // update(2016.5.2): sum <=0 --> clockwise
+    // sum <=0 --> clockwise
     var sum = 0;
     for ( var i = 0; i < newPoints.length; i++ ) {
         var c1 = newPoints[i];
         if (i == newPoints.length-1) {
-            var c2 = newPoints[0]
+            var c2 = newPoints[0];
         } else {
             var c2 = newPoints[i+1];
         }
@@ -140,7 +140,24 @@ utils.isClockwise = function( points ) {
     return (sum <= 0);
 }
 
+utils.polygonArea = function(corners){
+  var area = 0;
 
+  for(var i=0; i<corners.length; i++){
+    var c1 = corners[i];
+
+    if(i == corners.length-1){
+      var c2 = corners[0];
+    }
+    else{
+      var c2 = corners[i+1];
+    }
+
+    area += (c1.x * c2.y) - (c1.y * c2.x);
+  }
+
+  return area/2;
+}
 
 
 utils.consoleLog = function(a){
