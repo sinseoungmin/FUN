@@ -10,16 +10,6 @@ $(document).ready(function(){
   var fillColor = color;
   var tolerance = 10;
 
-  //adjList에서 해당 corner 객체의 index를 가져옴.
-  function adjListIdx(corner){
-    var idx = -1;
-    for(var i=0; i<adjList.length; i++){
-      if(adjList[i][0].id == corner.id ){
-        idx = i;
-      }
-    }
-    return idx;
-  }
 
 
   //클래스: corner, wall, room ---------------
@@ -123,25 +113,22 @@ $(document).ready(function(){
 
       this.mousedown = function (mdev){
 
-        //기존에 있는 corner나 wall와 거리가 가까울 때 해당 코너로 인식
+        //기존 corner와 가까이 click시 해당 corner로 인식
+        //기존 wall과 가까이 click시 해당 wall 위의 point로 인식
         var nearCorner = false;
 
-        utils.forEach(corners,function(c){
-          if(Math.abs(c.x - mdev._x) < tolerance && Math.abs(c.y - mdev._y) < tolerance ){
-            mdev._x = c.x;
-            mdev._y = c.y;
+        var otc = utils.onTheCorner(mdev._x, mdev._y ,corners, tolerance);
+        var otw = utils.onTheWall(mdev._x, mdev._y ,walls, tolerance);
 
-            nearCorner = true;
-          }
-        });
-        if(!nearCorner){
-          utils.forEach(walls,function(w){
-            if(utils.pointDistanceFromLine(mdev._x, mdev._y, w) < tolerance ){
-              var point = utils.closestPointOnLine(mdev._x, mdev._y, w);
-              mdev._x = point.x;
-              mdev._y = point.y;
-            }
-          });
+        if(otc){
+          mdev._x = otc.x;
+          mdev._y = otc.y;
+
+          nearCorner = true;
+        }
+        if(!nearCorner && otw.length > 0){
+          mdev._x = otw[1].x;
+          mdev._y = otw[1].y;
         }
 
 
@@ -182,6 +169,10 @@ $(document).ready(function(){
               adjList.push([corner1,[corner2]]);
               adjList.push([corner2,[corner1]]);
 
+              utils.adjIfOnTheWall(corner1, adjList, walls, tolerance);
+              utils.adjIfOnTheWall(corner2, adjList, walls, tolerance);
+
+
               var wall = new Wall(corner1,corner2);
               walls.push(wall);
 
@@ -193,9 +184,11 @@ $(document).ready(function(){
               corner2 = new Corner(mdev._x,mdev._y);
               corners.push(corner2);
 
-              var idx = adjListIdx(isInArr1[0])
+              var idx = utils.adjListIdx(isInArr1[0], adjList);
               adjList[idx][1].push(corner2);
               adjList.push([corner2,[isInArr1[0]]]);
+
+              utils.adjIfOnTheWall(corner2, adjList, walls, tolerance);
 
               wall = new Wall(isInArr1[0],corner2);
               walls.push(wall);
@@ -209,9 +202,11 @@ $(document).ready(function(){
               var corner1 = new Corner(fixX,fixY);
               corners.push(corner1);
 
-              var idx = adjListIdx(isInArr2[0])
+              var idx = utils.adjListIdx(isInArr2[0], adjList);
               adjList[idx][1].push(corner1);
               adjList.push([corner1,[isInArr2[0]]]);
+
+              utils.adjIfOnTheWall(corner1, adjList, walls, tolerance);
 
               var wall = new Wall(corner1,isInArr2[0]);
               walls.push(wall);
@@ -222,11 +217,11 @@ $(document).ready(function(){
               //corner1, corner2 둘 다 기존에 있던 점인 경우
 
               //corner1 adj에 corner2 추가
-              var idx = adjListIdx(isInArr1[0])
+              var idx = utils.adjListIdx(isInArr1[0], adjList);
               adjList[idx][1].push(isInArr2[0]);
 
               //corner2 adj에 corner1 추가
-              idx = adjListIdx(isInArr2[0])
+              idx = utils.adjListIdx(isInArr2[0], adjList);
               adjList[idx][1].push(isInArr1[0]);
 
               var wall = new Wall(isInArr1[0],isInArr2[0]);
@@ -394,7 +389,7 @@ $(document).ready(function(){
   function findPath(path){
 
     var now = path.slice(-1);
-    var idx = adjListIdx(now[0]);
+    var idx = utils.adjListIdx(now[0], adjList);
 
     if(idx == -1){
       utils.consoleLog('no adjcorners');
