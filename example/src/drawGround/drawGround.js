@@ -5,8 +5,8 @@ $(document).ready(function(){
 
   //settings ------------------------------
   var color = '#ffa500';
-  var radius = 5;
-  var lineWidth = 5;
+  var radius = 3;
+  var lineWidth = 3;
   var fillColor = color;
   var tolerance = 10;
 
@@ -51,7 +51,7 @@ $(document).ready(function(){
   var self = this;
   this.started = false;
 
-  var canvas, context, tool;
+  var canvas, context, floorplan;
   var fixX, fixY, mouseX, mouseY;
 
   var corners = [];
@@ -59,6 +59,7 @@ $(document).ready(function(){
 
   var adjList = [];
   var rooms = [];
+  var removedRooms =[];
 
 
   /* undomanager --------------------------
@@ -98,7 +99,7 @@ $(document).ready(function(){
       return;
     }
 
-    tool = new tool_pencil();
+    floorplan = new Floorplan();
 
     canvas.addEventListener('mousedown', ev_canvas, false);
     canvas.addEventListener('mousemove', ev_canvas, false);
@@ -106,9 +107,9 @@ $(document).ready(function(){
   }
 
   // 마우스 이동을 추적 하여 그리기 작업을 수행
-  function tool_pencil (){
+  function Floorplan (){
 
-      var tool = this;
+      var floorplanSelf = this;
 
 
       this.mousedown = function (mdev){
@@ -169,8 +170,8 @@ $(document).ready(function(){
               adjList.push([corner1,[corner2]]);
               adjList.push([corner2,[corner1]]);
 
-              utils.adjIfOnTheWall(corner1, adjList, walls, tolerance);
-              utils.adjIfOnTheWall(corner2, adjList, walls, tolerance);
+              utils.adjIfOnTheWall(corner1, adjList, walls, Wall, tolerance);
+              utils.adjIfOnTheWall(corner2, adjList, walls, Wall,tolerance);
 
 
               var wall = new Wall(corner1,corner2);
@@ -188,7 +189,7 @@ $(document).ready(function(){
               adjList[idx][1].push(corner2);
               adjList.push([corner2,[isInArr1[0]]]);
 
-              utils.adjIfOnTheWall(corner2, adjList, walls, tolerance);
+              utils.adjIfOnTheWall(corner2, adjList, walls, Wall, tolerance);
 
               wall = new Wall(isInArr1[0],corner2);
               walls.push(wall);
@@ -206,7 +207,7 @@ $(document).ready(function(){
               adjList[idx][1].push(corner1);
               adjList.push([corner1,[isInArr2[0]]]);
 
-              utils.adjIfOnTheWall(corner1, adjList, walls, tolerance);
+              utils.adjIfOnTheWall(corner1, adjList, walls, Wall, tolerance);
 
               var wall = new Wall(corner1,isInArr2[0]);
               walls.push(wall);
@@ -315,7 +316,7 @@ $(document).ready(function(){
         ev._y = ev.offsetY;
       }
 
-      var func = tool[ev.type];
+      var func = floorplan[ev.type];
       if (func){
           func(ev);
       }
@@ -432,7 +433,7 @@ $(document).ready(function(){
             utils.consoleLog('cwpath');
             utils.consoleLog(cwPath);
 
-            //is there room with same angle?
+            //is there room with same angle? , total = [hasSameAngle, isBigger, rmIdxs];
             var total = checkByAngle(cwPath);
 
             if(!total[0]){
@@ -493,10 +494,12 @@ $(document).ready(function(){
     var isBigger = false;
     var rmIdxs = [];
 
+    console.log(path);
+
+    iLoop:
     for(var i=0; i<rooms.length; i++){
       var idArr = rooms[i].idArr;
 
-      jLoop:
       for(var j=0; j<idArr.length; j++){
 
         var id1 = idArr[j];
@@ -531,18 +534,21 @@ $(document).ready(function(){
 
           //three connected corner(angle) is same
           if(id1 == p1.id && id2 == p2.id && id3 == p3.id){
-            utils.consoleLog('angle:' + id1 + id2 + id3);
+            console.log('angle:' + id1 + id2 + id3);
+            //console.log(rooms[i].idText);
             hasSameAngle = true;
 
             //compare area between existing room and new path
             if(rooms[i].area >= utils.polygonArea(path)){
+              console.log('기존 area가 더 넓음! 또는 area는 같은데 update됨!');
               rmIdxs.push(i);
             }
             else{
+              console.log('새 area가 더 넓음');
               isBigger = true;
             }
 
-            break jLoop;
+            break iLoop;
           }
 
         }//k

@@ -1,5 +1,6 @@
 var utils = {};
 
+
 utils.forEach = function(array, action) {
   for (var i = 0; i < array.length; i++) {
     action(array[i]);
@@ -91,22 +92,23 @@ utils.pointDistanceFromLine = function( x, y, wall ) {
 	return utils.distance(x,y,point.x,point.y);
 }
 
+
+//기존에 있던 corner나 wall 위를 click 했는지?
 utils.onTheCorner = function(x,y,corners,tolerance){
   var corner;
+
   utils.forEach(corners,function(c){
     if(Math.abs(c.x - x) < tolerance && Math.abs(c.y - y) < tolerance ){
-      console.log('near corner');
       corner = c;
     }
   });
   return corner;
 }
-
 utils.onTheWall = function(x,y, walls, tolerance){
   var returnArr = [];
+
   utils.forEach(walls,function(w){
     if(utils.pointDistanceFromLine(x, y, w) < tolerance ){
-      console.log('near wall');
       var point = utils.closestPointOnLine(x, y, w);
       returnArr[0] = w;
       returnArr[1] = point;
@@ -126,9 +128,13 @@ utils.adjListIdx = function(corner, adjList){
   return idx;
 }
 
-utils.adjIfOnTheWall = function(corner, adjList, walls, tolerance){
+//해당 corner가 wall 위에 찍힌 경우 adjList 관리
+utils.adjIfOnTheWall = function(corner, adjList, walls, Wall, tolerance){
   var otw = utils.onTheWall(corner.x, corner.y, walls, tolerance);
+
   if(otw.length > 0){
+
+    //새 corner와 wall의 양 끝 corner와 adj setting
     var idx1 = utils.adjListIdx(otw[0].start, adjList);
     var idx2 = utils.adjListIdx(otw[0].end, adjList);
     var idx3 = utils.adjListIdx(corner, adjList);
@@ -137,12 +143,30 @@ utils.adjIfOnTheWall = function(corner, adjList, walls, tolerance){
     adjList[idx2][1].push(corner);
     adjList[idx3][1].push(otw[0].start,otw[0].end);
 
-    console.log('adj리스트에 추가!!')
-    console.log(adjList);
+
+    //wall의 양 끝 corner 사이에 새 corner가 왔기 때문에, 양 끝 corner간의 adj관계는 없어져야 함
+    var idx4 = adjList[idx1][1].indexOf(otw[0].end);
+    var idx5 = adjList[idx2][1].indexOf(otw[0].start);
+
+    adjList[idx1][1].splice(idx4,1);
+    adjList[idx2][1].splice(idx5,1);
+
+
+    //기존에 있던 wall은 없어져야 함 & 새로운 wall 추가
+    var idxWall = walls.indexOf(otw[0]);
+    walls.splice(idxWall,1);
+
+    var wall1 = new Wall(corner,otw[0].start);
+    var wall2 = new Wall(corner,otw[0].end);
+    walls.push(wall1,wall2);
+
+    //console.log(walls);
+
   }
 }
 
 
+//random function
 utils.randKey = function(num){
   var arraySet = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
   'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','W','T','U','V','W','X','Y','Z',
@@ -154,7 +178,6 @@ utils.randKey = function(num){
   }
   return rN
 }
-
 utils.randHexColor = function(){
   var arraySet = ['a','b','c','d','e','f','0','1','2','3','4','5','6','7','8','9']
   var rN = '';
@@ -164,8 +187,6 @@ utils.randHexColor = function(){
   }
   return rN
 }
-
-
 
 
 // points is array of points with x,y attributes
@@ -200,6 +221,7 @@ utils.isClockwise = function( points ) {
     return (sum <= 0);
 }
 
+//corners are vertexes of polygon && measure polygonArea by outer product
 utils.polygonArea = function(corners){
   var area = 0;
 
@@ -218,6 +240,7 @@ utils.polygonArea = function(corners){
 
   return area/2;
 }
+
 
 
 utils.consoleLog = function(a){
